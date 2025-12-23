@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Visualize the Invisible | Towers of Hanoi</title>
+
+<style>
+:root {
+    --glow1: #00f2ff;
+    --glow2: #ff00ff;
+    --glow3: #00ff9d;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(120deg, #0f2027, #203a43, #2c5364);
+    color: white;
+    overflow: hidden;
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 18px;
+    font-size: 28px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 15px var(--glow1);
+}
+
+/* Controls */
+.controls {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.controls input {
+    width: 70px;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    text-align: center;
+    margin-right: 10px;
+}
+
+button {
+    padding: 12px 30px;
+    font-size: 16px;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(45deg, var(--glow1), var(--glow2));
+    box-shadow: 0 0 20px var(--glow1);
+}
+
+button:hover {
+    transform: scale(1.08);
+}
+
+/* Main Layout */
+.main {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 420px;
+}
+
+/* Info Panel */
+.panel {
+    width: 330px;
+    padding: 22px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 30px rgba(0,255,255,0.4);
+}
+
+.panel h3 {
+    color: var(--glow3);
+}
+
+.panel p {
+    line-height: 1.7;
+}
+
+/* Scene */
+.scene {
+    display: flex;
+    justify-content: space-around;
+    width: 60%;
+    align-items: flex-end;
+}
+
+/* Rods */
+.rod-wrap {
+    text-align: center;
+}
+
+.rod {
+    width: 150px;
+    height: 300px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    position: relative;
+}
+
+.rod::before {
+    content: "";
+    width: 12px;
+    height: 260px;
+    background: linear-gradient(#ffffff, #888);
+    border-radius: 6px;
+    position: absolute;
+    bottom: 0;
+    box-shadow: 0 0 20px rgba(255,255,255,0.6);
+}
+
+.rod.active::before {
+    box-shadow: 0 0 35px var(--glow1);
+}
+
+/* Disks */
+.disk {
+    height: 26px;
+    border-radius: 30px;
+    margin: 4px;
+    transition: all 0.7s ease;
+    box-shadow:
+        0 0 15px rgba(255,255,255,0.8),
+        inset 0 0 10px rgba(255,255,255,0.6);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<header>🌌 Visualize the Invisible – Towers of Hanoi</header>
+
+<div class="controls">
+    Disks:
+    <input type="number" id="diskInput" value="4" min="3" max="6">
+    <button onclick="start()">▶ Begin Recursive Journey</button>
+    <p>Moves: <span id="counter">0</span></p>
+</div>
+
+<div class="main">
+    <div class="panel">
+        <h3>Invisible Logic</h3>
+        <p id="info">
+            Click start to transform recursion into motion.
+        </p>
+    </div>
+
+    <div class="scene">
+        <div class="rod-wrap">
+            <div class="rod" id="A"></div>
+            <div>Source (A)</div>
+        </div>
+        <div class="rod-wrap">
+            <div class="rod" id="B"></div>
+            <div>Auxiliary (B)</div>
+        </div>
+        <div class="rod-wrap">
+            <div class="rod" id="C"></div>
+            <div>Destination (C)</div>
+        </div>
+    </div>
+</div>
+
+<footer>Recursion • Divide & Conquer • Visualization</footer>
+
+<script>
+const rods = {
+    A: document.getElementById("A"),
+    B: document.getElementById("B"),
+    C: document.getElementById("C")
+};
+
+const info = document.getElementById("info");
+const counter = document.getElementById("counter");
+const diskInput = document.getElementById("diskInput");
+
+let DISKS = 4;
+let moves = [];
+let count = 0;
+
+function createDisks() {
+    Object.values(rods).forEach(r => r.innerHTML = "");
+    for (let i = DISKS; i >= 1; i--) {
+        const d = document.createElement("div");
+        d.className = "disk";
+        d.style.width = (i * 32) + "px";
+        d.style.background = `linear-gradient(45deg,
+            hsl(${i * 60}, 90%, 60%),
+            hsl(${i * 60 + 40}, 90%, 45%))`;
+        rods.A.appendChild(d);
+    }
+}
+
+function hanoi(n, from, to, aux) {
+    if (n === 0) return;
+    hanoi(n - 1, from, aux, to);
+    moves.push([from, to, n]);
+    hanoi(n - 1, aux, to, from);
+}
+
+function glow(from, to) {
+    Object.values(rods).forEach(r => r.classList.remove("active"));
+    rods[from].classList.add("active");
+    rods[to].classList.add("active");
+}
+
+function animate() {
+    if (moves.length === 0) {
+        info.innerHTML = "✨ Recursion complete. Invisible logic is now visible.";
+        return;
+    }
+
+    const [from, to, depth] = moves.shift();
+    glow(from, to);
+
+    const disk = rods[from].lastElementChild;
+    rods[to].appendChild(disk);
+
+    count++;
+    counter.textContent = count;
+
+    info.innerHTML =
+        `Recursive depth <b>${depth}</b><br>
+         Move disk from <b>${from}</b> → <b>${to}</b>`;
+
+    setTimeout(animate, 900);
+}
+
+function start() {
+    DISKS = parseInt(diskInput.value);
+    if (DISKS < 3) {
+        alert("Use at least 3 disks");
+        return;
+    }
+
+    moves = [];
+    count = 0;
+    counter.textContent = "0";
+    info.innerHTML = "Breaking the problem into smaller subproblems...";
+
+    createDisks();
+    hanoi(DISKS, "A", "C", "B");
+    setTimeout(animate, 1200);
+}
+</script>
+
+</body>
+</html>
